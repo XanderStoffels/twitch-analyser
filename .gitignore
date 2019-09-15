@@ -347,3 +347,11 @@ healthchecksdb
 
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
+
+ChatBot/.idea/.idea.ChatBot.dir/.idea/
+
+ChatBot/.idea/.idea.ChatBot.dir/
+
+Persistor/.idea/.idea.Persistor.dir/.idea/
+
+Persistor/.idea/.idea.Persistor.dir/

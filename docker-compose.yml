@@ -1,0 +1,41 @@
+version: "2.1"
+services:
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: "rabbitmq:3-management"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      timeout: 5s
+      interval: 5s
+      retries: 5
+      test:
+        - "CMD"
+        - "rabbitmqctl"
+        - "status"
+
+  sql-server:
+    container_name: sql-server
+    image: "microsoft/mssql-server-linux:2017-latest"
+    ports: 
+      - "1433:1433"
+    environment:
+      SA_PASSWORD: "ChangeMe"
+      ACCEPT_EULA: "Y"
+
+  chat-bot:
+    container_name: chat-bot
+    build: ./ChatBot
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  persistor:
+    container_name: persistor
+    build: ./Persistor
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
