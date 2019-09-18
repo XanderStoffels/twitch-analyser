@@ -1,3 +1,4 @@
+
 ****Requirements****
 
  - Docker
@@ -10,12 +11,23 @@
  -  Check the docker-compose.yml file and choose
    a password for the MSSQL Server. This password also needs to be
    entered in the Persistor/appsettings.json connection string.
+   
+ - <details>
+   <summary>Unix</summary>
+   <br>
+   Run the run.bash file in the root folder.
+   </details>
 
- - Open a command line tool in the root folder and execute 
- `docker-compose build`.
+   <details>
+   <summary>Windows</summary>
+   <br>
+		Open command prompt/powershell in the root folder and execute
+		
+    `docker-compose build`
+    followed by,
+    `docker-compose run`.
+   </details>
+</br>
 
- - After that's done, execute 
- `docker-compose up`.
-
-You can connect to the RabbitMQ Management portal on your local host.
+You can connect to the RabbitMQ Management portal on your local host.</br>
 You can connect to the MSSQL Server on your local host.
