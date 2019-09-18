@@ -4,6 +4,6 @@ namespace Persistor.Core
 {
     public interface IMessageHandler
     {
-        Task Handle(byte[] e);
+        void Handle(byte[] e);
     }
 }

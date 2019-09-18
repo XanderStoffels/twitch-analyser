@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,81 +13,76 @@ namespace Persistor.Core
 {
     public class MessageHandler : IMessageHandler
     {
-        public async Task Handle(byte[] e)
+        public void Handle(byte[] e)
         {
             var json = Encoding.UTF8.GetString(e);
             var message = JsonConvert.DeserializeObject<RabbitMqChatMessage>(json);
 
             using (var context = DbFactory.CreateDbContext())
             {
-                await SaveNewData(context, message);
-                await SaveMessage(context, message);
-                await context.SaveChangesAsync();
+                SaveNewData(context, message);
+                SaveMessage(context, message);
+                context.SaveChangesAsync();
                 Console.WriteLine(message.Message);
             }
         }
 
-        private async Task SaveNewData(PersistorDbContext context, RabbitMqChatMessage message)
+        private void SaveNewData(PersistorDbContext context, RabbitMqChatMessage message)
         {
-            var channelExist = await ChannelExist(context, message.Channel);
+            var channelExist = ChannelExist(context, message.Channel);
             if (!channelExist)
-            {
-                await CreateChannel(context, message.Channel);
-                await context.SaveChangesAsync();
-            }
+                CreateChannel(context, message.Channel);
 
-            var userExist = await UserExist(context, message.UserId);
+            var userExist = UserExist(context, message.UserId);
             if (!userExist)
             {
-                var user = (await CreateUser(context, message.UserId)).Entity;
+                var user = CreateUser(context, message.UserId).Entity;
                 user.Usernames.Add(new TwitchUsername {FirstSeen = DateTime.Now, Username = message.Username});
-                await context.SaveChangesAsync();
             }
             else
             {
-                var usernameExist =
-                    await UsernameExistForUser(context, message.UserId, message.Username);
+                var usernameExist = UsernameExistForUser(context, message.UserId, message.Username);
                 if (!usernameExist)
-                {
-                    await CreateUsernameForUser(context, message.UserId, message.Username);
-                    await context.SaveChangesAsync();
-
-                }
+                    CreateUsernameForUser(context, message.UserId, message.Username);
             }
+
+            if (context.HasUnsavedChanges()) context.SaveChanges();
         }
 
-        private ConfiguredTaskAwaitable<bool> ChannelExist(PersistorDbContext context, string id) =>
-            context.Channels.AnyAsync(c => c.Id == id)
-                .ConfigureAwait(false);
+        private bool ChannelExist(PersistorDbContext context, string id) =>
+            context.Channels.Any(c => c.Id == id);
 
-        private ConfiguredTaskAwaitable<EntityEntry<Channel>> CreateChannel(PersistorDbContext context, string id) =>
-            context.Channels.AddAsync(new Channel {Id = id, DiscoveredOn = DateTime.Now})
-                .ConfigureAwait(false);
 
-        private ConfiguredTaskAwaitable<bool> UserExist(PersistorDbContext context, string id) =>
-            context.Users.AnyAsync(c => c.Id == id).ConfigureAwait(false);
+        private void CreateChannel(PersistorDbContext context, string id) => 
+            context.Channels.Add(new Channel {Id = id, DiscoveredOn = DateTime.Now});
 
-        private ConfiguredTaskAwaitable<EntityEntry<TwitchUser>> CreateUser(PersistorDbContext context,
+
+        private bool UserExist(PersistorDbContext context, string id) =>
+            context.Users.Any(c => c.Id == id);
+
+        private EntityEntry<TwitchUser> CreateUser(PersistorDbContext context,
             string userId) =>
-            context.Users.AddAsync(new TwitchUser {Id = userId}).ConfigureAwait(false);
+            context.Users.Add(new TwitchUser {Id = userId});
 
-        private ConfiguredTaskAwaitable<bool> UsernameExistForUser(PersistorDbContext context, string userId,
+        private bool UsernameExistForUser(PersistorDbContext context, string userId,
             string username) =>
-            context.Usernames.AnyAsync(u => u.UserId == userId && u.Username == username).ConfigureAwait(false);
+            context.Usernames.Any(u => u.UserId == userId && u.Username == username);
 
-        private ConfiguredTaskAwaitable<EntityEntry<TwitchUsername>> CreateUsernameForUser(PersistorDbContext context,
-            string userid, string username) =>
-            context.Usernames.AddAsync(new TwitchUsername
-                {FirstSeen = DateTime.Now, UserId = userid, Username = username}).ConfigureAwait(false);
+        private void CreateUsernameForUser(PersistorDbContext context,
+            string userid, string username)
+        {
+            context.Usernames.Add(new TwitchUsername
+                {FirstSeen = DateTime.Now, UserId = userid, Username = username});
+        }
 
-        private ConfiguredTaskAwaitable<EntityEntry<ChatMessage>> SaveMessage(PersistorDbContext context,
+        private void SaveMessage(PersistorDbContext context,
             RabbitMqChatMessage message) =>
-            context.ChatMessages.AddAsync(new ChatMessage
+            context.ChatMessages.Add(new ChatMessage
             {
                 ChannelId = message.Channel,
                 SenderId = message.UserId,
                 Message = message.Message,
                 ReceivedOn = DateTime.Now
-            }).ConfigureAwait(false);
+            });
     }
 }
