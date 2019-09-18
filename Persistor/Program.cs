@@ -14,68 +14,42 @@ namespace Persistor
 {
     class Program
     {
-        private static AppConfiguration Configuration;
-        private static ManualResetEvent QuitEvent = new ManualResetEvent(false);
+        private static AppConfiguration _configuration;
+        private static ManualResetEvent _quitEvent = new ManualResetEvent(false);
         
         static void Main(string[] args)
         {
             Console.CancelKeyPress += (sender, eventArgs) =>
             {
-                QuitEvent.Set();
+                _quitEvent.Set();
                 eventArgs.Cancel = true;
             };
             
-            Configuration = new ConfigurationBuilder()
+            _configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .Build()
                 .Get<AppConfiguration>();
-
+            
+            DbFactory.Configure(_configuration.ConnectionString);
             MigrateDatabase();
             
-            IRabbitMqService rabbitService = new RabbitMqService(Configuration.RabbitMqHost);
-            rabbitService.Connect();
-            rabbitService.OnReceive += SaveMessage;
+            IRabbitMqService rabbitService = new RabbitMqService(_configuration.RabbitMqHost);
+            Controller
  
-            var reporting = new Timer(60000);
-            reporting.Elapsed += (sender, eventArgs) => Report();
-            reporting.Start();
+          
             
-            QuitEvent.WaitOne();
+            _quitEvent.WaitOne();
 
-        }
-
-        private static void SaveMessage(object sender, byte[] e)
-        {
-            var json = Encoding.UTF8.GetString(e);
-            var message = JsonConvert.DeserializeObject<RabbitMqChatMessage>(json);
-            using (var context = GetContext())
-            {
-                context.ChatMessages.Add(message);
-                context.SaveChanges();
-            }
         }
 
         private static void MigrateDatabase()
         {
             Console.WriteLine("Migrating database");
-            PersistorDbContext.ConnectionString = Configuration.ConnectionString;
-            using (var context = GetContext())
+            using (var context = DbFactory.CreateDbContext())
             {
                 context.Database.Migrate();
             }
         }
-
-        private static void Report()
-        {
-            using (var context = GetContext())
-            {
-                Console.WriteLine($"Amount of messages saved: {context.ChatMessages.Count()}");
-            }
-        }
-
-        private static PersistorDbContext GetContext()
-        {
-            return new PersistorDbContext();
-        }
+        
     }
 }

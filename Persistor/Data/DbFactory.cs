@@ -1,36 +1,42 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
 namespace Persistor.Data
 {
-    public class DbFactory : IDesignTimeDbContextFactory<PersistorDbContext>
+    public static class DbFactory
     {
-        private string ConnectionString { get; set; }
+        private static string _connectionString;
 
-        public DbFactory(string connectionString = null)
+        public static PersistorDbContext CreateDbContext()
         {
-            this.ConnectionString = connectionString;
+            return CreateDbContext(_connectionString);
         }
 
-        public PersistorDbContext CreateDbContext(string[] args)
+        public static PersistorDbContext CreateDbContext(string connectionString)
         {
-            if (this.ConnectionString == null)
+            _connectionString = connectionString;
+            if (_connectionString == null)
                 LoadConnectionString();
 
             var builder = new DbContextOptionsBuilder<PersistorDbContext>()
-                .UseSqlServer(this.ConnectionString)
+                .UseSqlServer(_connectionString)
                 .EnableDetailedErrors();
-            
+
             return new PersistorDbContext(builder.Options);
+
         }
-                
-        private void LoadConnectionString()
+
+        public static void Configure(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
+        private static void LoadConnectionString()
         {
             var builder = new ConfigurationBuilder();
             builder.AddJsonFile("appsettings.json", optional: false);
             var configuration = builder.Build();
-            this.ConnectionString = configuration.GetConnectionString("ConnectionString");
+            _connectionString = configuration.GetConnectionString("ConnectionString");
         }
     }
 }
