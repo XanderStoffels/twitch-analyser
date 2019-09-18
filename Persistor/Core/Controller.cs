@@ -13,28 +13,21 @@ namespace Persistor.Core
 {
     public class Controller
     {
-        private readonly IRabbitMqService _rabbitMq;
-
         public Controller(IRabbitMqService rabbitMq)
         {
-            this._rabbitMq = _rabbitMq;
-            this._rabbitMq.OnReceive +=  async (sender, e) => await RabbitMqOnOnReceive(sender, e);
+            rabbitMq.OnReceive +=  async (sender, e) => await Handle(e);
         }
 
-        private async Task RabbitMqOnOnReceive(object sender, byte[] e)
+        private static async Task Handle(byte[] e)
         {
             var json = Encoding.UTF8.GetString(e);
             var message = JsonConvert.DeserializeObject<RabbitMqChatMessage>(json);
 
-            // Keep the database updated before adding the chat message.
             using (var context = DbFactory.CreateDbContext())
             {
                 await CheckForNewData(context, message);
-                
+                await SaveMessage(context, message);
             }
-            
-            
-            
         }
 
         private static async Task CheckForNewData(PersistorDbContext context, RabbitMqChatMessage message)
@@ -82,6 +75,15 @@ namespace Persistor.Core
             string userid, string username) =>
             context.Usernames.AddAsync(new TwitchUsername
                 {FirstSeen = DateTime.Now, UserId = userid, Username = username}).ConfigureAwait(false);
+        
+        private static ConfiguredTaskAwaitable<EntityEntry<ChatMessage>> SaveMessage(PersistorDbContext context, RabbitMqChatMessage message) =>
+            context.ChatMessages.AddAsync(new ChatMessage
+            {
+                ChannelId = message.Channel,
+                SenderId = message.UserId,
+                Message = message.Message,
+                ReceivedOn = DateTime.Now
+            }).ConfigureAwait(false);
 
     }
 }

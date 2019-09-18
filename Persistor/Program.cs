@@ -34,7 +34,7 @@ namespace Persistor
             MigrateDatabase();
             
             IRabbitMqService rabbitService = new RabbitMqService(_configuration.RabbitMqHost);
-            Controller
+            
  
           
             
