@@ -6,8 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Persistor.Config;
+using Persistor.Core;
 using Persistor.Core.Rabbit;
 using Persistor.Data;
+using RabbitMQ.Client.Content;
 using Timer = System.Timers.Timer;
 
 namespace Persistor
@@ -34,9 +36,9 @@ namespace Persistor
             MigrateDatabase();
             
             IRabbitMqService rabbitService = new RabbitMqService(_configuration.RabbitMqHost);
-            
- 
-          
+            IMessageHandler handler = new MessageHandler();
+            Controller c = new Controller(rabbitService, handler);
+            c.Start();
             
             _quitEvent.WaitOne();
 
