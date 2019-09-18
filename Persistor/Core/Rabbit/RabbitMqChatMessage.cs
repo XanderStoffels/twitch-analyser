@@ -1,8 +1,8 @@
 using System;
 
-namespace ChatBot.Data
+namespace Persistor.Core.Rabbit
 {
-    public class TwitchChatMessage
+    public class RabbitMqChatMessage
     {
         public string UserId { get; set; }
         public string Username { get; set; }

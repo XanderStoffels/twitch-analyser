@@ -47,7 +47,7 @@ namespace Persistor
         private static void SaveMessage(object sender, byte[] e)
         {
             var json = Encoding.UTF8.GetString(e);
-            var message = JsonConvert.DeserializeObject<TwitchChatMessage>(json);
+            var message = JsonConvert.DeserializeObject<RabbitMqChatMessage>(json);
             using (var context = GetContext())
             {
                 context.ChatMessages.Add(message);
