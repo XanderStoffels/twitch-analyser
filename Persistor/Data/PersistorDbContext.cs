@@ -1,5 +1,7 @@
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Persistor.Data
 {
@@ -12,6 +14,13 @@ namespace Persistor.Data
 
         public PersistorDbContext(DbContextOptions options) : base(options)
         {
+        }
+        
+        public bool HasUnsavedChanges()
+        {
+            return this.ChangeTracker.Entries().Any(e => e.State == EntityState.Added
+                                                         || e.State == EntityState.Modified
+                                                         || e.State == EntityState.Deleted);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
