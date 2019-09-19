@@ -23,7 +23,6 @@ namespace Persistor.Core
                 SaveNewData(context, message);
                 SaveMessage(context, message);
                 context.SaveChangesAsync();
-                Console.WriteLine(message.Message);
             }
         }
 
@@ -31,19 +30,26 @@ namespace Persistor.Core
         {
             var channelExist = ChannelExist(context, message.Channel);
             if (!channelExist)
+            {
                 CreateChannel(context, message.Channel);
+                Console.WriteLine($"Discovered: Channel: {message.Channel}");
+            }
 
             var userExist = UserExist(context, message.UserId);
             if (!userExist)
             {
                 var user = CreateUser(context, message.UserId).Entity;
                 user.Usernames.Add(new TwitchUsername {FirstSeen = DateTime.Now, Username = message.Username});
+                Console.WriteLine($"Discovered: User: {user.Id}");
             }
             else
             {
                 var usernameExist = UsernameExistForUser(context, message.UserId, message.Username);
                 if (!usernameExist)
+                {
                     CreateUsernameForUser(context, message.UserId, message.Username);
+                    Console.WriteLine($"Discovered: Username for {message.UserId}: {message.Username}");
+                }
             }
 
             if (context.HasUnsavedChanges()) context.SaveChanges();
