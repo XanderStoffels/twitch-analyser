@@ -5,13 +5,8 @@ using System.Threading.Tasks;
 using ChatBot.Config;
 using ChatBot.Core;
 using ChatBot.Core.Rabbit;
-using ChatBot.Data;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using RabbitMQ.Client;
-using Serilog;
-using Serilog.Core;
 using TwitchLib.Client;
 using TwitchLib.Client.Models;
 
@@ -33,7 +28,7 @@ namespace ChatBot
                 .AddJsonFile("appsettings.json")
                 .Build()
                 .Get<AppConfiguration>();
-            
+
             if (appConfiguration.StartupTimeout > 0)
             {
                 Console.WriteLine("Waiting for startup timeout....");
@@ -44,8 +39,10 @@ namespace ChatBot
             rabbitService.Connect();
 
             var sniffer = new TwitchChatSniffer(appConfiguration.Username, appConfiguration.AccessToken,
-                appConfiguration.ClientId, TimeSpan.FromMilliseconds(appConfiguration.StreamPollingInterval));
-            sniffer.MaxConcurrentChannelJoins = appConfiguration.MaxConcurrentChannels;
+                appConfiguration.ClientId, TimeSpan.FromMilliseconds(appConfiguration.StreamPollingInterval))
+            {
+                MaxConcurrentChannelJoins = appConfiguration.MaxConcurrentChannels
+            };
 
             sniffer.OnMessageSniffed += (sender, message) =>
             {
@@ -53,23 +50,22 @@ namespace ChatBot
                 var bytes = Encoding.UTF8.GetBytes(json);
                 rabbitService.Publish(bytes);
             };
-            
-            CancellationToken token = new CancellationToken();
+
+            var token = new CancellationToken();
             sniffer.Start(token);
-            
+
             QuitEvent.WaitOne();
         }
-        
-        
-        private static TwitchClient ConfiguredClient(string username, string accesstoken,  Action<ChatMessage> messageEvent)
+
+
+        private static TwitchClient ConfiguredClient(string username, string accessToken,
+            Action<ChatMessage> messageEvent)
         {
             var c = new TwitchClient();
             c.OnMessageReceived += (sender, receivedArgs) => { messageEvent.Invoke(receivedArgs.ChatMessage); };
-            var cred = new ConnectionCredentials(username, accesstoken);
+            var cred = new ConnectionCredentials(username, accessToken);
             c.Initialize(cred);
             return c;
         }
-        
-        
     }
 }

@@ -1,9 +1,6 @@
 using System;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 using Persistor.Core.Rabbit;
@@ -55,24 +52,34 @@ namespace Persistor.Core
             if (context.HasUnsavedChanges()) context.SaveChanges();
         }
 
-        private bool ChannelExist(PersistorDbContext context, string id) =>
-            context.Channels.Any(c => c.Id == id);
+        private bool ChannelExist(PersistorDbContext context, string id)
+        {
+            return context.Channels.Any(c => c.Id == id);
+        }
 
 
-        private void CreateChannel(PersistorDbContext context, string id) => 
+        private void CreateChannel(PersistorDbContext context, string id)
+        {
             context.Channels.Add(new Channel {Id = id, DiscoveredOn = DateTime.Now});
+        }
 
 
-        private bool UserExist(PersistorDbContext context, string id) =>
-            context.Users.Any(c => c.Id == id);
+        private bool UserExist(PersistorDbContext context, string id)
+        {
+            return context.Users.Any(c => c.Id == id);
+        }
 
         private EntityEntry<TwitchUser> CreateUser(PersistorDbContext context,
-            string userId) =>
-            context.Users.Add(new TwitchUser {Id = userId});
+            string userId)
+        {
+            return context.Users.Add(new TwitchUser {Id = userId});
+        }
 
         private bool UsernameExistForUser(PersistorDbContext context, string userId,
-            string username) =>
-            context.Usernames.Any(u => u.UserId == userId && u.Username == username);
+            string username)
+        {
+            return context.Usernames.Any(u => u.UserId == userId && u.Username == username);
+        }
 
         private void CreateUsernameForUser(PersistorDbContext context,
             string userid, string username)
@@ -82,7 +89,8 @@ namespace Persistor.Core
         }
 
         private void SaveMessage(PersistorDbContext context,
-            RabbitMqChatMessage message) =>
+            RabbitMqChatMessage message)
+        {
             context.ChatMessages.Add(new ChatMessage
             {
                 ChannelId = message.Channel,
@@ -90,5 +98,6 @@ namespace Persistor.Core
                 Message = message.Message,
                 ReceivedOn = DateTime.Now
             });
+        }
     }
 }

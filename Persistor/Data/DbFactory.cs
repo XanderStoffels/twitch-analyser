@@ -23,7 +23,6 @@ namespace Persistor.Data
                 .EnableDetailedErrors();
 
             return new PersistorDbContext(builder.Options);
-
         }
 
         public static void Configure(string connectionString)
@@ -34,7 +33,7 @@ namespace Persistor.Data
         private static void LoadConnectionString()
         {
             var builder = new ConfigurationBuilder();
-            builder.AddJsonFile("appsettings.json", optional: false);
+            builder.AddJsonFile("appsettings.json", false);
             var configuration = builder.Build();
             _connectionString = configuration.GetConnectionString("ConnectionString");
         }

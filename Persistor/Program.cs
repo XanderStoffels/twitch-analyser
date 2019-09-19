@@ -1,47 +1,41 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using Persistor.Config;
 using Persistor.Core;
 using Persistor.Core.Rabbit;
 using Persistor.Data;
-using RabbitMQ.Client.Content;
-using Timer = System.Timers.Timer;
 
 namespace Persistor
 {
-    class Program
+    internal class Program
     {
         private static AppConfiguration _configuration;
-        private static ManualResetEvent _quitEvent = new ManualResetEvent(false);
-        
-        static void Main(string[] args)
+        private static readonly ManualResetEvent _quitEvent = new ManualResetEvent(false);
+
+        private static void Main(string[] args)
         {
             Console.CancelKeyPress += (sender, eventArgs) =>
             {
                 _quitEvent.Set();
                 eventArgs.Cancel = true;
             };
-            
+
             _configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .Build()
                 .Get<AppConfiguration>();
-            
+
             DbFactory.Configure(_configuration.ConnectionString);
             MigrateDatabase();
-            
+
             IRabbitMqService rabbitService = new RabbitMqService(_configuration.RabbitMqHost);
             IMessageHandler handler = new MessageHandler();
-            Controller c = new Controller(rabbitService, handler);
+            var c = new Controller(rabbitService, handler);
             c.Start();
-            
-            _quitEvent.WaitOne();
 
+            _quitEvent.WaitOne();
         }
 
         private static void MigrateDatabase()
@@ -52,6 +46,5 @@ namespace Persistor
                 context.Database.Migrate();
             }
         }
-        
     }
 }

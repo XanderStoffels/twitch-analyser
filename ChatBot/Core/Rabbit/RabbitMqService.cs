@@ -1,31 +1,29 @@
-using System;
 using ChatBot.Core.Rabbit.Exceptions;
-using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
-using Serilog;
 
 namespace ChatBot.Core.Rabbit
 {
     public class RabbitMqService : IRabbitMqService
     {
-        protected ConnectionFactory Factory { get; }
+        private IModel _channel;
 
         private IConnection _connection;
-        private IModel _channel;
-        
+
         public RabbitMqService(string hostAddress)
         {
-            this.Factory = new ConnectionFactory()
+            Factory = new ConnectionFactory
             {
                 HostName = hostAddress
             };
         }
 
+        protected ConnectionFactory Factory { get; }
+
         public void Connect()
         {
-            this._connection = Factory.CreateConnection();
-            this._channel = _connection.CreateModel();
-            this._channel.QueueDeclare("chat", false, false, false, null);
+            _connection = Factory.CreateConnection();
+            _channel = _connection.CreateModel();
+            _channel.QueueDeclare("chat", false, false, false, null);
         }
 
         public void Disconnect()
@@ -36,9 +34,9 @@ namespace ChatBot.Core.Rabbit
 
         public void Publish(byte[] bytes)
         {
-            if (!this.CanPublish())
+            if (!CanPublish())
                 throw new RabbitMqServiceException("The connection and/or channel is not open.");
-            
+
             _channel.BasicPublish("", "chat", null, bytes);
         }
 
@@ -50,7 +48,7 @@ namespace ChatBot.Core.Rabbit
 
         public void Dispose()
         {
-            this.Disconnect();
+            Disconnect();
             _connection = null;
             _channel = null;
         }
