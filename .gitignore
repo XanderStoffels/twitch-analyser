@@ -359,3 +359,7 @@ Persistor/.idea/.idea.Persistor.dir/
 .idea/.idea.TwitchAnalyser/
 
 Persistor/appsettings.json
+
+StatApi/appsettings.json
+
+StatApi/appsettings.Development.json

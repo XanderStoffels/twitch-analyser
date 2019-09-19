@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistor", "Persistor\Pers
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatBot", "ChatBot\ChatBot.csproj", "{625622DC-4B2F-48BC-8966-99CE584E589D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatApi", "StatApi\StatApi.csproj", "{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,5 +46,17 @@ Global
 		{625622DC-4B2F-48BC-8966-99CE584E589D}.Release|x64.Build.0 = Release|Any CPU
 		{625622DC-4B2F-48BC-8966-99CE584E589D}.Release|x86.ActiveCfg = Release|Any CPU
 		{625622DC-4B2F-48BC-8966-99CE584E589D}.Release|x86.Build.0 = Release|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Debug|x64.Build.0 = Debug|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Debug|x86.Build.0 = Debug|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Release|x64.ActiveCfg = Release|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Release|x64.Build.0 = Release|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Release|x86.ActiveCfg = Release|Any CPU
+		{9B8DC43F-2E03-481A-BDD7-2826E56B7EA1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
