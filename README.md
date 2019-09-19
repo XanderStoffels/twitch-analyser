@@ -31,8 +31,7 @@
   ```
    
  -  Check the docker-compose.yml file and choose
-   a password for the MSSQL Server. This password also needs to be
-   entered in the Persistor/appsettings.json connection string.
+   a password for the MSSQL Server. Make sure this password is also used in the Persistor/appsettings.json connection string.
 
  - <details>
    <summary>Unix</summary>
