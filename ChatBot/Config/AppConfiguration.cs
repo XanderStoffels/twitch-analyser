@@ -8,7 +8,7 @@ namespace ChatBot.Config
         public string ClientId { get; set; }
         public int StreamPollingInterval { get; set; }
         public int StartupTimeout { get; set; }
-        public string RabbitMqChannel { get; set; }
+        public string RabbitMqHost { get; set; }
         public int MaxConcurrentChannels { get; set; }
     }
 }
