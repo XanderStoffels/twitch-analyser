@@ -35,7 +35,7 @@ namespace ChatBot
                 await Task.Delay(appConfiguration.StartupTimeout);
             }
 
-            var rabbitService = new RabbitMqService(appConfiguration.RabbitMqHost);
+            var rabbitService = new RabbitMqService(appConfiguration.RabbitMqChannel);
             rabbitService.Connect();
 
             var sniffer = new TwitchChatSniffer(appConfiguration.Username, appConfiguration.AccessToken,

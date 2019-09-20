@@ -28,3 +28,5 @@ namespace Persistor.Data
         }
     }
 }
+
+// "Server=minecraft.stream.army;Database=ChatHistory;User Id=sa;Password=DBpass123!"
