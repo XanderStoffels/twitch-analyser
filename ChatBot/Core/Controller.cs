@@ -30,7 +30,7 @@ namespace ChatBot.Core
             api.Settings.ClientId = config.ClientId;
             
             // Configure Chat Service
-            IChannelDiscoverer discoverer = new FeaturedStreamsDiscoverer(api);
+            IChannelDiscoverer discoverer = new TopViewersDiscovery(api);
             this._chatService = new TwitchChatService(client, discoverer, TimeSpan.FromMilliseconds(config.StreamPollingInterval));
             
             // Configure Rabbit MQ
