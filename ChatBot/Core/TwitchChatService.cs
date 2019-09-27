@@ -4,13 +4,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ChatBot.Core.Discovery;
-using ChatBot.Data;
-using TwitchLib.Api;
-using TwitchLib.Api.Interfaces;
-using TwitchLib.Client;
+using Shared;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
-using TwitchLib.Client.Models;
 
 namespace ChatBot.Core
 {

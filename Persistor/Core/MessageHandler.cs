@@ -1,103 +1,37 @@
-using System;
-using System.Linq;
 using System.Text;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Newtonsoft.Json;
-using Persistor.Core.Rabbit;
-using Persistor.Data;
+using System.Text.Json;
+using System.Threading.Tasks;
+using MongoDB.Bson.IO;
+using Persistor.Core.Data;
+using Shared;
 
 namespace Persistor.Core
 {
     public class MessageHandler : IMessageHandler
     {
+        private readonly IDataService _dataService;
+
+        public MessageHandler(IDataService dataService)
+        {
+            this._dataService = dataService;
+        }
         public void Handle(byte[] e)
         {
-            var json = Encoding.UTF8.GetString(e);
-            var message = JsonConvert.DeserializeObject<RabbitMqChatMessage>(json);
-
-            using (var context = DbFactory.CreateDbContext())
+            Task.Run(async () =>
             {
-                SaveNewData(context, message);
-                SaveMessage(context, message);
-                context.SaveChangesAsync();
-            }
-        }
-
-        private void SaveNewData(PersistorDbContext context, RabbitMqChatMessage message)
-        {
-            var channelExist = ChannelExist(context, message.Channel);
-            if (!channelExist)
-            {
-                CreateChannel(context, message.Channel);
-                Console.WriteLine($"Discovered: Channel: {message.Channel}");
-            }
-
-            var userExist = UserExist(context, message.UserId);
-            if (!userExist)
-            {
-                var user = CreateUser(context, message.UserId).Entity;
-                user.Usernames.Add(new TwitchUsername {FirstSeen = DateTime.Now, Username = message.Username});
-                Console.WriteLine($"Discovered: User: {user.Id}");
-            }
-            else
-            {
-                var usernameExist = UsernameExistForUser(context, message.UserId, message.Username);
-                if (!usernameExist)
-                {
-                    CreateUsernameForUser(context, message.UserId, message.Username);
-                    Console.WriteLine($"Discovered: Username for {message.UserId}: {message.Username}");
-                }
-            }
-
-            if (context.HasUnsavedChanges()) context.SaveChanges();
-        }
-
-        private bool ChannelExist(PersistorDbContext context, string id)
-        {
-            return context.Channels.Any(c => c.Id == id);
-        }
-
-
-        private void CreateChannel(PersistorDbContext context, string id)
-        {
-            context.Channels.Add(new Channel {Id = id, DiscoveredOn = DateTime.Now});
-        }
-
-
-        private bool UserExist(PersistorDbContext context, string id)
-        {
-            return context.Users.Any(c => c.Id == id);
-        }
-
-        private EntityEntry<TwitchUser> CreateUser(PersistorDbContext context,
-            string userId)
-        {
-            return context.Users.Add(new TwitchUser {Id = userId});
-        }
-
-        private bool UsernameExistForUser(PersistorDbContext context, string userId,
-            string username)
-        {
-            return context.Usernames.Any(u => u.UserId == userId && u.Username == username);
-        }
-
-        private void CreateUsernameForUser(PersistorDbContext context,
-            string userid, string username)
-        {
-            context.Usernames.Add(new TwitchUsername
-                {FirstSeen = DateTime.Now, UserId = userid, Username = username});
-        }
-
-        private void SaveMessage(PersistorDbContext context,
-            RabbitMqChatMessage message)
-        {
-            context.ChatMessages.Add(new ChatMessage
-            {
-                ChannelId = message.Channel,
-                SenderId = message.UserId,
-                Message = message.Message,
-                ReceivedOn = DateTime.Now
+                var json = Encoding.UTF8.GetString(e);
+                var message = JsonSerializer.Deserialize<TwitchChatMessage>(json);
+                await this._dataService.SaveMessageAsync(Convert(message));
             });
         }
+        
+        private static MessageModel Convert(TwitchChatMessage message) => new MessageModel()
+        {
+            Message = message.Message,
+            Username = message.Username,
+            Channel = message.Channel,
+            ReceivedAt = message.ReceivedAt,
+            UserId = message.UserId
+        };
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -6,15 +7,16 @@ namespace Persistor.Core.Rabbit
 {
     public class RabbitMqService : IRabbitMqService
     {
+        private IConfiguration _config;
         private IModel _channel;
-
         private IConnection _connection;
 
-        public RabbitMqService(string hostAddress)
+        public RabbitMqService(IConfiguration config)
         {
+            this._config = config;
             Factory = new ConnectionFactory
             {
-                HostName = hostAddress
+                HostName = config["RabbitMqHost"]
             };
         }
 

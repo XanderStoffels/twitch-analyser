@@ -1,7 +1,7 @@
 using System.Text;
 using System.Threading.Tasks;
-using ChatBot.Data;
 using Newtonsoft.Json;
+using Shared;
 
 namespace ChatBot.Core.Rabbit
 {
