@@ -3,51 +3,44 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ChatBot.Data;
-using TwitchLib.Api;
-using TwitchLib.Api.Interfaces;
-using TwitchLib.Client;
+using ChatBot.Core.Discovery;
+using Shared;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
-using TwitchLib.Client.Models;
 
 namespace ChatBot.Core
 {
-    public class TwitchChatSniffer
+    public class TwitchChatService
     {
-        public TwitchChatSniffer(string username, string accessToken, string clientId, TimeSpan channelSniffInterval)
+        public event EventHandler<TwitchChatMessage> OnMessageSniffed;
+        public int MaxConcurrentChannelJoins { get; set; } = 20;
+        public TimeSpan SniffInterval { get; }
+
+        private readonly ITwitchClient _client;
+        private readonly IChannelDiscoverer _discoverer;
+        
+        public TwitchChatService(ITwitchClient client, IChannelDiscoverer discoverer, TimeSpan channelSniffInterval)
         {
-            Client = new TwitchClient();
-            Api = new TwitchAPI();
-            SniffInterval = channelSniffInterval;
-
-            var credentials = new ConnectionCredentials(username, accessToken);
-            Client.Initialize(credentials);
-            Client.OnMessageReceived += ClientOnMessageReceived;
-
-            Api.Settings.ClientId = clientId;
-            Api.Settings.AccessToken = accessToken;
+            this._client = client;
+            this._discoverer = discoverer;
+            this.SniffInterval = channelSniffInterval;
+            client.OnMessageReceived += ClientOnMessageReceived;
         }
 
-        public int MaxConcurrentChannelJoins { get; set; } = 10;
-        public TimeSpan SniffInterval { get; }
-        protected ITwitchClient Client { get; }
-        protected ITwitchAPI Api { get; }
-        public event EventHandler<TwitchChatMessage> OnMessageSniffed;
 
         public void Start(CancellationToken token)
         {
             // Some nice Async/Await compatibility provided by the TwitchLib author...
             // /s
-            Client.OnConnected += HandleConnect;
+            this._client.OnConnected += HandleConnect;
 
             async void HandleConnect(object sender, OnConnectedArgs e)
             {
-                Client.OnConnected -= HandleConnect;
+                this._client.OnConnected -= HandleConnect;
                 await StartSniffing(token);
             }
 
-            Client.Connect();
+            this._client.Connect();
         }
 
         private async Task StartSniffing(CancellationToken token)
@@ -55,36 +48,34 @@ namespace ChatBot.Core
             while (!token.IsCancellationRequested)
             {
                 var featuredChannels = await SniffChannels();
-                var joinedChannels = Client.JoinedChannels.Select(c => c.Channel).ToArray();
+                var joinedChannels = this._client.JoinedChannels.Select(c => c.Channel).ToArray();
 
                 // Join the new featured channels.
                 foreach (var channel in featuredChannels.Except(joinedChannels))
                 {
                     Console.WriteLine($"Joining {channel}");
-                    Client.JoinChannel(channel);
+                    this._client.JoinChannel(channel);
                 }
 
                 // Leave the channels that are not featured.
                 foreach (var channel in joinedChannels.Except(featuredChannels))
                 {
                     Console.WriteLine($"Leaving {channel}");
-                    Client.LeaveChannel(channel);
+                    this._client.LeaveChannel(channel);
                 }
 
                 await Task.Delay(SniffInterval, token);
             }
         }
 
-        private async Task<List<string>> SniffChannels()
+        private Task<List<string>> SniffChannels()
         {
-            var features = await Api.Streams.v5.GetFeaturedStreamAsync(MaxConcurrentChannelJoins);
-            return features.Featured.Select(f => f.Stream.Channel.Name).ToList();
+            return this._discoverer.DiscoverChannels(this.MaxConcurrentChannelJoins);
         }
 
         private void ClientOnMessageReceived(object sender, OnMessageReceivedArgs e)
         {
             var message = e.ChatMessage;
-            ;
             var simpleMessage = new TwitchChatMessage
             {
                 Channel = message.Channel,

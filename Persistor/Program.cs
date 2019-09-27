@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Threading;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Persistor.Config;
+using Microsoft.Extensions.DependencyInjection;
 using Persistor.Core;
+using Persistor.Core.Data;
 using Persistor.Core.Rabbit;
-using Persistor.Data;
 
 namespace Persistor
 {
     internal class Program
     {
-        private static AppConfiguration _configuration;
         private static readonly ManualResetEvent _quitEvent = new ManualResetEvent(false);
 
         private static void Main(string[] args)
@@ -22,29 +20,21 @@ namespace Persistor
                 eventArgs.Cancel = true;
             };
 
-            _configuration = new ConfigurationBuilder()
+            IConfiguration config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
-                .Build()
-                .Get<AppConfiguration>();
+                .Build();
 
-            DbFactory.Configure(_configuration.ConnectionString);
-            MigrateDatabase();
+            var services = new ServiceCollection()
+                .AddSingleton(config)
+                .AddSingleton<IRabbitMqService>(new RabbitMqService(config))
+                .AddSingleton<IDataService, MongoDataService>()
+                .AddTransient<IMessageHandler, MessageHandler>()
+                .BuildServiceProvider();
 
-            IRabbitMqService rabbitService = new RabbitMqService(_configuration.RabbitMqHost);
-            IMessageHandler handler = new MessageHandler();
-            var c = new Controller(rabbitService, handler);
+            var c = new Controller(services);
             c.Start();
 
             _quitEvent.WaitOne();
-        }
-
-        private static void MigrateDatabase()
-        {
-            Console.WriteLine("Migrating database");
-            using (var context = DbFactory.CreateDbContext())
-            {
-                context.Database.Migrate();
-            }
         }
     }
 }

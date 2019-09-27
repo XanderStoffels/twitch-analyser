@@ -1,6 +1,6 @@
 using System;
 
-namespace ChatBot.Data
+namespace Shared
 {
     public class TwitchChatMessage
     {

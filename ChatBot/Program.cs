@@ -35,37 +35,11 @@ namespace ChatBot
                 await Task.Delay(appConfiguration.StartupTimeout);
             }
 
-            var rabbitService = new RabbitMqService(appConfiguration.RabbitMqChannel);
-            rabbitService.Connect();
-
-            var sniffer = new TwitchChatSniffer(appConfiguration.Username, appConfiguration.AccessToken,
-                appConfiguration.ClientId, TimeSpan.FromMilliseconds(appConfiguration.StreamPollingInterval))
-            {
-                MaxConcurrentChannelJoins = appConfiguration.MaxConcurrentChannels
-            };
-
-            sniffer.OnMessageSniffed += (sender, message) =>
-            {
-                var json = JsonConvert.SerializeObject(message);
-                var bytes = Encoding.UTF8.GetBytes(json);
-                rabbitService.Publish(bytes);
-            };
-
-            var token = new CancellationToken();
-            sniffer.Start(token);
+            Controller controller = new Controller(appConfiguration);
+            controller.Start();
 
             QuitEvent.WaitOne();
-        }
-
-
-        private static TwitchClient ConfiguredClient(string username, string accessToken,
-            Action<ChatMessage> messageEvent)
-        {
-            var c = new TwitchClient();
-            c.OnMessageReceived += (sender, receivedArgs) => { messageEvent.Invoke(receivedArgs.ChatMessage); };
-            var cred = new ConnectionCredentials(username, accessToken);
-            c.Initialize(cred);
-            return c;
+            controller.Stop();
         }
     }
 }

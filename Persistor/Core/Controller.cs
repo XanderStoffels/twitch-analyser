@@ -1,4 +1,8 @@
+using System;
+using Microsoft.Extensions.DependencyInjection;
+using Persistor.Core.Data;
 using Persistor.Core.Rabbit;
+using Shared;
 
 namespace Persistor.Core
 {
@@ -6,15 +10,18 @@ namespace Persistor.Core
     {
         private readonly IRabbitMqService _rabbitMq;
 
-        public Controller(IRabbitMqService rabbitMq, IMessageHandler handler)
+        public Controller(IServiceProvider services)
         {
+            var rabbitMq = services.GetRequiredService<IRabbitMqService>();
+
             _rabbitMq = rabbitMq;
-            rabbitMq.OnReceive += (sender, e) => handler.Handle(e);
+            rabbitMq.OnReceive += (sender, e) => services.GetRequiredService<IMessageHandler>();
         }
 
         public void Start()
         {
             _rabbitMq.Connect();
         }
+        
     }
 }
