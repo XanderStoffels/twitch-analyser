@@ -13,7 +13,7 @@ namespace ChatBot.Core
     public class TwitchChatService
     {
         public event EventHandler<TwitchChatMessage> OnMessageSniffed;
-        public int MaxConcurrentChannelJoins { get; set; } = 20;
+        public int MaxConcurrentChannelJoins { get; set; } = 50;
         public TimeSpan SniffInterval { get; }
 
         private readonly ITwitchClient _client;

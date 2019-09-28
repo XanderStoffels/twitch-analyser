@@ -6,7 +6,7 @@ namespace Persistor.Core.Data
     public class MessageModel
     {
         [BsonId]
-        public string Id { get; set; }
+        public Guid Id { get; set; }
         public string UserId { get; set; }
         public string Username { get; set; }
         public string Channel { get; set; }

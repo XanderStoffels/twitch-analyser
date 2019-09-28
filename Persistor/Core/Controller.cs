@@ -15,7 +15,7 @@ namespace Persistor.Core
             var rabbitMq = services.GetRequiredService<IRabbitMqService>();
 
             _rabbitMq = rabbitMq;
-            rabbitMq.OnReceive += (sender, e) => services.GetRequiredService<IMessageHandler>();
+            rabbitMq.OnReceive += (sender, e) => services.GetRequiredService<IMessageHandler>().Handle(e);
         }
 
         public void Start()

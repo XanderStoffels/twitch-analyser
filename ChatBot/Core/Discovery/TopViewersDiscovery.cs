@@ -23,18 +23,11 @@ namespace ChatBot.Core.Discovery
             var topGames = await GetTopGames(10);
             
             // Wait for all the streams to be fetched.
-            var apiResults = await Task.WhenAll(topGames.Select(TopStreamersForGame));
+            var apiResults = await TopStreamersForGames(topGames, amount);
             
-            // Gather all the streams the API has returned.
-            var streams = apiResults.SelectMany(s => s.ToList());
-            
-            // We want the top @amount of streams, sorted by viewer count.
-            var topStreamers = streams.OrderByDescending(s => s.ViewerCount)
-                .Take(amount)
-                .Select(s => s.Id)
-                .ToList();
-
-            return topStreamers;
+            var usernames = await IdToName(apiResults.Select(r => r.UserId).ToList());
+            Console.WriteLine($"Total viewer count: {apiResults.Sum(s => s.ViewerCount)}");
+            return usernames;
         }
 
         private async Task<List<string>> GetTopGames(int amount)
@@ -45,12 +38,17 @@ namespace ChatBot.Core.Discovery
                 .ToList();
         }
 
-        private async Task<List<(string Id, int ViewerCount)>> TopStreamersForGame(string gameId)
+        private async Task<List<(string Id, string UserId, int ViewerCount)>> TopStreamersForGames(List<string> gameIds, int amount)
         {
-            return (await _api.Streams.helix.GetStreamsAsync(gameIds: new[] {gameId}.ToList(), first: 5))
+            return (await _api.Streams.helix.GetStreamsAsync(gameIds: gameIds, first: amount))
                 .Streams
-                .Select(s => (s.Id, s.ViewerCount))
+                .Select(s => (s.Id, s.UserId ,s.ViewerCount))
                 .ToList();
+        }
+
+        private async Task<List<string>> IdToName(List<string> ids)
+        {
+            return (await _api.Users.helix.GetUsersAsync(ids)).Users.Select(u => u.DisplayName).ToList();
         }
     }
 }

@@ -30,7 +30,10 @@ namespace Persistor.Core.Rabbit
             _channel.QueueDeclare("chat", false, false, false, null);
 
             var consumer = new EventingBasicConsumer(_channel);
-            consumer.Received += (model, ea) => OnReceive?.Invoke(this, ea.Body);
+            consumer.Received += (model, ea) =>
+            {
+                OnReceive?.Invoke(this, ea.Body);
+            };
 
             _channel.BasicConsume("chat", true, consumer);
         }
