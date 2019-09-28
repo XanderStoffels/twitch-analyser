@@ -1,3 +1,6 @@
+<h1>:exclamation: This documentation is outdated</h1>
+<p><bold> :exclamation: This documentation is only relevant for release 1.0 and won't help you with the latest build.</bold></p>
+
 <h3>Requirements</h3>
 
  - Docker
